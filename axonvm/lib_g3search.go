@@ -31,7 +31,7 @@ import (
 	"strings"
 	"sync"
 
-	"g3pix.com.br/axonasp/vbscript"
+	"github.com/peoplegroupservices/axonasp/v2/vbscript"
 	"github.com/blugelabs/bluge"
 )
 

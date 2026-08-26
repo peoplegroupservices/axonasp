@@ -25,7 +25,7 @@ import (
 	"regexp"
 	"strings"
 
-	"g3pix.com.br/axonasp/vbscript"
+	"github.com/peoplegroupservices/axonasp/v2/vbscript"
 )
 
 // regExpNativeObject stores one VBScript RegExp runtime instance.

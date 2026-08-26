@@ -28,7 +28,7 @@ import (
 	"strconv"
 	"strings"
 
-	"g3pix.com.br/axonasp/vbscript"
+	"github.com/peoplegroupservices/axonasp/v2/vbscript"
 	"gopkg.in/gomail.v2"
 )
 

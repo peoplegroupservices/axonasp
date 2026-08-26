@@ -38,8 +38,8 @@ import (
 	"sync"
 	"time"
 
-	"g3pix.com.br/axonasp/axonvm"
-	"g3pix.com.br/axonasp/axonvm/asp"
+	"github.com/peoplegroupservices/axonasp/v2/axonvm"
+	"github.com/peoplegroupservices/axonasp/v2/axonvm/asp"
 )
 
 var (

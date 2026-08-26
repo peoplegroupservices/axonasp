@@ -37,7 +37,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"g3pix.com.br/axonasp/axonvm"
+	"github.com/peoplegroupservices/axonasp/v2/axonvm"
 )
 
 // g3alEndpoint is the URL prefix for all G3AxonLive communication. Every fetch

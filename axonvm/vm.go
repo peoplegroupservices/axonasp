@@ -42,9 +42,9 @@ import (
 	"golang.org/x/text/collate"
 	"golang.org/x/text/language"
 
-	"g3pix.com.br/axonasp/axonvm/asp"
-	"g3pix.com.br/axonasp/jscript"
-	"g3pix.com.br/axonasp/vbscript"
+	"github.com/peoplegroupservices/axonasp/v2/axonvm/asp"
+	"github.com/peoplegroupservices/axonasp/v2/jscript"
+	"github.com/peoplegroupservices/axonasp/v2/vbscript"
 )
 
 const StackSize = 4096

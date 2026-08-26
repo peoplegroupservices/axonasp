@@ -2,7 +2,7 @@ package vbscript
 
 import (
 	"fmt"
-	"g3pix.com.br/axonasp/vbscript/ast"
+	"github.com/peoplegroupservices/axonasp/v2/vbscript/ast"
 	"strings"
 	"testing"
 )

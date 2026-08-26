@@ -25,7 +25,7 @@ package axonvm
 import (
 	"fmt"
 
-	"g3pix.com.br/axonasp/vbscript"
+	"github.com/peoplegroupservices/axonasp/v2/vbscript"
 )
 
 // adodbError is the disabled stub for an ADODB.Error runtime instance.

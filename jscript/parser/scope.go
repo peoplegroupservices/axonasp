@@ -3,8 +3,8 @@ package parser
 import (
 	"slices"
 
-	"g3pix.com.br/axonasp/jscript/ast"
-	"g3pix.com.br/axonasp/jscript/unistring"
+	"github.com/peoplegroupservices/axonasp/v2/jscript/ast"
+	"github.com/peoplegroupservices/axonasp/v2/jscript/unistring"
 )
 
 type _scope struct {

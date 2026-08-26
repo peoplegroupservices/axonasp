@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"g3pix.com.br/axonasp/jscript"
-	"g3pix.com.br/axonasp/vbscript"
+	"github.com/peoplegroupservices/axonasp/v2/jscript"
+	"github.com/peoplegroupservices/axonasp/v2/vbscript"
 )
 
 func buildLargeIncludeContent(lines int) string {

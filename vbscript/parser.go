@@ -50,7 +50,7 @@ package vbscript
 import (
 	"strconv"
 
-	"g3pix.com.br/axonasp/vbscript/ast"
+	"github.com/peoplegroupservices/axonasp/v2/vbscript/ast"
 )
 
 // Parser represents a VBScript parser

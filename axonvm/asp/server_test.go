@@ -24,7 +24,7 @@ import (
 	"strings"
 	"testing"
 
-	"g3pix.com.br/axonasp/vbscript"
+	"github.com/peoplegroupservices/axonasp/v2/vbscript"
 )
 
 // TestServerEncoding verifies Server HTML and URL encoding helper methods.

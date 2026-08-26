@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"sort"
 
-	"g3pix.com.br/axonasp/jscript/file"
-	"g3pix.com.br/axonasp/jscript/token"
+	"github.com/peoplegroupservices/axonasp/v2/jscript/file"
+	"github.com/peoplegroupservices/axonasp/v2/jscript/token"
 )
 
 const (

@@ -50,7 +50,7 @@ import (
 	"sync"
 	"time"
 
-	"g3pix.com.br/axonasp/axonconfig"
+	"github.com/peoplegroupservices/axonasp/v2/axonconfig"
 	"github.com/spf13/viper"
 )
 

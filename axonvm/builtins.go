@@ -35,7 +35,7 @@ import (
 	"strings"
 	"time"
 
-	"g3pix.com.br/axonasp/vbscript"
+	"github.com/peoplegroupservices/axonasp/v2/vbscript"
 )
 
 // BuiltinFunc is the signature for all VBScript built-in functions.

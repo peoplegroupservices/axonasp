@@ -37,7 +37,7 @@ import (
 	"testing"
 	"time"
 
-	"g3pix.com.br/axonasp/axonvm"
+	"github.com/peoplegroupservices/axonasp/v2/axonvm"
 )
 
 // TestNormalizeAndAuthorizeG3ALSessionID verifies fetch payload session IDs are bound to ASPSESSIONID.
