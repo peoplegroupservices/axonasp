@@ -3218,19 +3218,18 @@ func (c *Compiler) parseIfStatement() {
 		}
 
 		// Microsoft VBScript compatibility: in single-line If forms, an explicit
-		// trailing "End If" is accepted on the same logical line (e.g. "If x Then y=1 : End If")
-		// or across an ASP tag boundary (e.g. "If x Then y=1 %><% End If").
+		// trailing "End If" is accepted on the same logical line, e.g.
+		// "If x Then y=1 : End If".
+		//
+		// It is NOT accepted across an ASP tag boundary. "If x Then <stmt> %>" is a
+		// complete single-line If — the boundary ends the statement — so a following
+		// "<% End If %>" belongs to an enclosing block If, not to this one. Absorbing
+		// it here leaves the enclosing block unterminated. Verified against IIS 10.0 /
+		// VBScript 5.8.16384, which rejects the orphan form outright; see
+		// TestSingleLineIfDoesNotAbsorbEndIfAcrossTagBoundary.
+		//
 		// Line terminators are NOT consumed here — consuming them would incorrectly
 		// eat the "End" from "End Function", "End Sub", etc. on the following line.
-		for {
-			switch c.next.(type) {
-			case *vbscript.ColonLineTerminationToken, *vbscript.CommentToken:
-				c.move()
-				continue
-			}
-			break
-		}
-		c.consumeTagBoundaryKeyword(vbscript.KeywordEnd, vbscript.KeywordIf)
 		for {
 			switch c.next.(type) {
 			case *vbscript.ColonLineTerminationToken, *vbscript.CommentToken:
@@ -3275,6 +3274,13 @@ func (c *Compiler) parseIfStatement() {
 	} else {
 		c.patchJump(jumpFalseOffset)
 	}
+
+	// A block If whose last arm is an inline ElseIf ("ElseIf c Then <stmt>") leaves
+	// the tag boundary unconsumed, because the inline arm parser stops at it. The
+	// block still has to be closed, so allow "%><% End If" here. IIS 10.0 accepts
+	// this; see TestBlockIfEndsAcrossTagBoundaryAfterInlineElseIf. Nothing is
+	// consumed unless End If genuinely follows, so intervening HTML still renders.
+	c.consumeTagBoundaryKeyword(vbscript.KeywordEnd, vbscript.KeywordIf)
 
 	c.expectKeyword(vbscript.KeywordEnd)
 	c.expectKeyword(vbscript.KeywordIf)

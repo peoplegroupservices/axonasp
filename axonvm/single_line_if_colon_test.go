@@ -104,39 +104,44 @@ End If
 	}
 }
 
-// TestSingleLineIfTagBoundaryReproduction validates Issue 1 reproduction where an ASP tag boundary
-// separates a statement on the same line as Then from an explicit End If.
+// ---------------------------------------------------------------------------
+// FORK DIVERGENCE — see FORK.md and guimaraeslucas/axonasp#129.
+//
+// The three tests below asserted, upstream, that a single-line
+// `If cond Then <stmt>` followed by `%><% End If %>` compiles and runs the
+// statement. Measured on IIS 10.0 / VBScript 5.8.16384 on 2026-09-16, IIS
+// REJECTS that source with HTTP 500: `If cond Then <stmt>` is a complete
+// single-line If, the tag boundary ends it, and the `End If` is an orphan.
+//
+// The colon-separated and multi-line spellings behave identically, so the
+// measurement covers the exact sources used here. The expectations are
+// therefore inverted in this fork. If upstream resolves #129 the other way,
+// this is the file where the disagreement lives.
+// ---------------------------------------------------------------------------
+
+// TestSingleLineIfTagBoundaryReproduction pins that an orphan End If after a
+// single-line If is rejected, as IIS rejects it.
 func TestSingleLineIfTagBoundaryReproduction(t *testing.T) {
 	source := `<% Dim x : x = 1 : If x = 1 Then Response.Write "one" %><% End If %>`
 	compiler := NewASPCompiler(source)
-	if err := compiler.Compile(); err != nil {
-		t.Fatalf("compile failed: %v", err)
-	}
-
-	out := runVBSAndGetOutput(t, source)
-	expected := "one"
-	if out != expected {
-		t.Fatalf("unexpected output: got %q, want %q", out, expected)
+	if err := compiler.Compile(); err == nil {
+		t.Fatal("expected a compilation error for an orphan End If after a single-line If, got none")
 	}
 }
 
-// TestSingleLineIfTagBoundaryFalseBranch verifies that when condition is false, the statement is skipped.
+// TestSingleLineIfTagBoundaryFalseBranch pins the same rejection when the
+// condition is false — it is a compile-time question, not a branch one.
 func TestSingleLineIfTagBoundaryFalseBranch(t *testing.T) {
 	source := `<% Dim x : x = 2 : If x = 1 Then Response.Write "one" %><% End If %>`
 	compiler := NewASPCompiler(source)
-	if err := compiler.Compile(); err != nil {
-		t.Fatalf("compile failed: %v", err)
-	}
-
-	out := runVBSAndGetOutput(t, source)
-	expected := ""
-	if out != expected {
-		t.Fatalf("unexpected output: got %q, want %q", out, expected)
+	if err := compiler.Compile(); err == nil {
+		t.Fatal("expected a compilation error for an orphan End If after a single-line If, got none")
 	}
 }
 
-// TestSingleLineIfTagBoundaryWithWhitespaceAndNewlines verifies that whitespace or newlines between %> and <%
-// do not break the tag boundary recognition for trailing End If.
+// TestSingleLineIfTagBoundaryWithWhitespaceAndNewlines pins that whitespace and
+// newlines between the tags do not change the answer: it is the construct that
+// is rejected, not the tag adjacency.
 func TestSingleLineIfTagBoundaryWithWhitespaceAndNewlines(t *testing.T) {
 	source := `<%
 Dim x : x = 1
@@ -144,14 +149,8 @@ If x = 1 Then Response.Write "one" %>
    
 <% End If %>`
 	compiler := NewASPCompiler(source)
-	if err := compiler.Compile(); err != nil {
-		t.Fatalf("compile failed: %v", err)
-	}
-
-	out := runVBSAndGetOutput(t, source)
-	expected := "one"
-	if out != expected {
-		t.Fatalf("unexpected output: got %q, want %q", out, expected)
+	if err := compiler.Compile(); err == nil {
+		t.Fatal("expected a compilation error for an orphan End If after a single-line If, got none")
 	}
 }
 
