@@ -33,7 +33,7 @@ import (
 	"sync"
 	"time"
 
-	"g3pix.com.br/axonasp/v2/axonconfig"
+	"github.com/peoplegroupservices/axonasp/v2/axonconfig"
 )
 
 // Session maintains user state between requests.

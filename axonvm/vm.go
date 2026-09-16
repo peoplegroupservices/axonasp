@@ -43,9 +43,9 @@ import (
 	"golang.org/x/text/collate"
 	"golang.org/x/text/language"
 
-	"g3pix.com.br/axonasp/v2/axonvm/asp"
-	"g3pix.com.br/axonasp/v2/jscript"
-	"g3pix.com.br/axonasp/v2/vbscript"
+	"github.com/peoplegroupservices/axonasp/v2/axonvm/asp"
+	"github.com/peoplegroupservices/axonasp/v2/jscript"
+	"github.com/peoplegroupservices/axonasp/v2/vbscript"
 )
 
 // StackSize is the maximum number of stack slots available for the VM. 4096 VBScript default size.

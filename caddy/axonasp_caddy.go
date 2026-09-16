@@ -24,9 +24,9 @@ import (
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 
-	"g3pix.com.br/axonasp/v2/axonconfig"
-	"g3pix.com.br/axonasp/v2/axonvm"
-	"g3pix.com.br/axonasp/v2/axonvm/asp"
+	"github.com/peoplegroupservices/axonasp/v2/axonconfig"
+	"github.com/peoplegroupservices/axonasp/v2/axonvm"
+	"github.com/peoplegroupservices/axonasp/v2/axonvm/asp"
 )
 
 // Interface guards to verify implementation of standard Caddy v2 interfaces.

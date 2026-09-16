@@ -27,7 +27,7 @@ import (
 	"strings"
 	"testing"
 
-	"g3pix.com.br/axonasp/v2/vbscript"
+	"github.com/peoplegroupservices/axonasp/v2/vbscript"
 )
 
 func runASPAndCollectOutput(t *testing.T, source string) string {

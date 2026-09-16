@@ -3,10 +3,10 @@ package parser
 import (
 	"strings"
 
-	"g3pix.com.br/axonasp/v2/jscript/ast"
-	"g3pix.com.br/axonasp/v2/jscript/file"
-	"g3pix.com.br/axonasp/v2/jscript/token"
-	"g3pix.com.br/axonasp/v2/jscript/unistring"
+	"github.com/peoplegroupservices/axonasp/v2/jscript/ast"
+	"github.com/peoplegroupservices/axonasp/v2/jscript/file"
+	"github.com/peoplegroupservices/axonasp/v2/jscript/token"
+	"github.com/peoplegroupservices/axonasp/v2/jscript/unistring"
 )
 
 func (self *_parser) parseIdentifier() *ast.Identifier {

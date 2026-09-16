@@ -26,9 +26,9 @@ import (
 	"slices"
 	"strconv"
 
-	jsast "g3pix.com.br/axonasp/v2/jscript/ast"
-	jstoken "g3pix.com.br/axonasp/v2/jscript/token"
-	jsunistring "g3pix.com.br/axonasp/v2/jscript/unistring"
+	jsast "github.com/peoplegroupservices/axonasp/v2/jscript/ast"
+	jstoken "github.com/peoplegroupservices/axonasp/v2/jscript/token"
+	jsunistring "github.com/peoplegroupservices/axonasp/v2/jscript/unistring"
 )
 
 func jsFunctionPreventsLocalSlots(fn *jsast.FunctionLiteral) bool {

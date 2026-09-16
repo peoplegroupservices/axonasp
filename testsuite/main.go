@@ -36,9 +36,9 @@ import (
 	"strings"
 	"time"
 
-	"g3pix.com.br/axonasp/v2/axonconfig"
-	"g3pix.com.br/axonasp/v2/axonvm"
-	"g3pix.com.br/axonasp/v2/axonvm/asp"
+	"github.com/peoplegroupservices/axonasp/v2/axonconfig"
+	"github.com/peoplegroupservices/axonasp/v2/axonvm"
+	"github.com/peoplegroupservices/axonasp/v2/axonvm/asp"
 	"github.com/joho/godotenv"
 	"github.com/spf13/pflag"
 )

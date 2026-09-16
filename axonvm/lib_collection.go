@@ -3,7 +3,7 @@ package axonvm
 import (
 	"strings"
 
-	"g3pix.com.br/axonasp/v2/vbscript"
+	"github.com/peoplegroupservices/axonasp/v2/vbscript"
 )
 
 // vbsCollection is the runtime state for one Collection instance.

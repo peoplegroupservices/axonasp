@@ -23,7 +23,7 @@ package axonvm
 import (
 	"strings"
 
-	"g3pix.com.br/axonasp/v2/vbscript"
+	"github.com/peoplegroupservices/axonasp/v2/vbscript"
 )
 
 // applyDirective applies one compiled ASP page directive to the current VM host state.

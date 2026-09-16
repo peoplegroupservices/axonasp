@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"g3pix.com.br/axonasp/v2/jscript/ast"
+	"github.com/peoplegroupservices/axonasp/v2/jscript/ast"
 	"testing"
 )
 

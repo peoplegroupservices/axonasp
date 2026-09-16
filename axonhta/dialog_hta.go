@@ -67,7 +67,7 @@ package main
 import (
 	"strings"
 
-	"g3pix.com.br/axonasp/v2/axonvm"
+	"github.com/peoplegroupservices/axonasp/v2/axonvm"
 	"github.com/ncruces/zenity"
 )
 

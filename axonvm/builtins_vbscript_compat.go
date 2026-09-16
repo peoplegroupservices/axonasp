@@ -33,8 +33,8 @@ import (
 	"unicode"
 	"unicode/utf16"
 
-	"g3pix.com.br/axonasp/v2/axonconfig"
-	"g3pix.com.br/axonasp/v2/vbscript"
+	"github.com/peoplegroupservices/axonasp/v2/axonconfig"
+	"github.com/peoplegroupservices/axonasp/v2/vbscript"
 )
 
 // builtinDefaults stores fallback global settings loaded from config/axonasp.toml.

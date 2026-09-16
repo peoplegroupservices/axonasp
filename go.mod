@@ -1,4 +1,4 @@
-module g3pix.com.br/axonasp/v2
+module github.com/peoplegroupservices/axonasp/v2
 
 go 1.27
 

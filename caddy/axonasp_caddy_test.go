@@ -9,9 +9,9 @@ import (
 	"testing"
 	"unsafe"
 
-	"g3pix.com.br/axonasp/v2/axonconfig"
-	"g3pix.com.br/axonasp/v2/axonvm"
-	"g3pix.com.br/axonasp/v2/axonvm/asp"
+	"github.com/peoplegroupservices/axonasp/v2/axonconfig"
+	"github.com/peoplegroupservices/axonasp/v2/axonvm"
+	"github.com/peoplegroupservices/axonasp/v2/axonvm/asp"
 )
 
 func TestCustomIndexResolution(t *testing.T) {

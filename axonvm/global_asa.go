@@ -28,8 +28,8 @@ import (
 	"strings"
 	"sync"
 
-	"g3pix.com.br/axonasp/v2/axonvm/asp"
-	"g3pix.com.br/axonasp/v2/vbscript"
+	"github.com/peoplegroupservices/axonasp/v2/axonvm/asp"
+	"github.com/peoplegroupservices/axonasp/v2/vbscript"
 )
 
 // GlobalASA manages the parsed and compiled state of the Application's global.asa file.

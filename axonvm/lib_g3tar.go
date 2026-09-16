@@ -32,7 +32,7 @@ import (
 	"strings"
 	"time"
 
-	"g3pix.com.br/axonasp/v2/vbscript"
+	"github.com/peoplegroupservices/axonasp/v2/vbscript"
 )
 
 // g3tarEntry stores one indexed header for read-mode operations.

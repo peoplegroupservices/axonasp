@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"g3pix.com.br/axonasp/v2/axonvm"
+	"github.com/peoplegroupservices/axonasp/v2/axonvm"
 	"github.com/caddyserver/caddy/v2/modules/caddyhttp"
 )
 

@@ -23,7 +23,7 @@ package axonvm
 import (
 	"fmt"
 
-	"g3pix.com.br/axonasp/v2/vbscript"
+	"github.com/peoplegroupservices/axonasp/v2/vbscript"
 )
 
 // panicLibraryDisabled raises a consistent runtime error for disabled libraries.

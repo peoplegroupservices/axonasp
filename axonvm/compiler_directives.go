@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"strings"
 
-	"g3pix.com.br/axonasp/v2/vbscript"
+	"github.com/peoplegroupservices/axonasp/v2/vbscript"
 )
 
 // compileASPDirective compiles one <%@ ... %> directive block into runtime directive opcodes.
