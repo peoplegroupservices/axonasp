@@ -82,7 +82,7 @@ on upstream v2.3.22, before this patch).
 
 ### 2. `optimizeDeadConditionalJumpPass` was quadratic in bytecode length
 
-Upstream: filed alongside this - see the commit for the profile.
+Upstream: [#130](https://github.com/guimaraeslucas/axonasp/issues/130).
 
 `findPreviousInstructionStart` rescans the bytecode from offset zero to find the
 instruction before a given offset. The dead-conditional-jump pass called it once
