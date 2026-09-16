@@ -112,6 +112,25 @@ because by the time `Compile` returns the dead jumps are already gone.
 `deadConditionalJumpPass` in `compiler_optimizer.go` is a var purely so that
 test can swap the implementation. It is not a configuration point.
 
+### 3. `opcodeOperandSize` panics on a truncated tail instruction
+
+Upstream: filed as #131.
+
+`opcodeOperandSize` reads operand bytes with no bounds check, for `OpExtPrefix`
+and `OpJSObjectRest`. The optimiser calls it while walking bytecode and can reach
+an instruction whose operands run past the end, so the read panics with
+`index out of range [1] with length 1` and takes the whole compile down. The page
+does not fail to compile so much as the compiler falls over.
+
+Present from v2.3.20; v2.3.19 is fine. It surfaced on `payroll/make-invoices.asp`
+after an ordinary edit to `Connections/ecommdata.asp` — assigning a page-scope
+variable inside a nested `If` was enough to shift the bytecode into the shape
+that triggers it, which means any edit could hit it.
+
+Both reads are now guarded and return 0, so a walker advances one byte and
+terminates instead of dying. `axonvm/opcode_operand_size_truncated_test.go`
+covers the decoder directly and a full peephole pass over a truncated tail.
+
 ## Upstream test suite
 
 21 tests in `./axonvm` fail on upstream v2.3.22 on Linux before any of our

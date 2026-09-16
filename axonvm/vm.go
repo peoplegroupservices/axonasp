@@ -1138,6 +1138,12 @@ func opcodeOperandSize(op OpCode, bytecode []byte, ip int) int {
 		return 2
 	case OpJSObjectRest:
 		// countH(1), countL(1) + 2*count operand indices + dynamicCountH(1), dynamicCountL(1)
+		// Guarded: this decoder is called by the optimiser while walking bytecode,
+		// which can reach an instruction whose operands run past the end. Reading
+		// them unchecked panicked the whole compile. See TestOpcodeOperandSizeTruncated.
+		if ip+3 > len(bytecode) {
+			return 0
+		}
 		count := int(binary.BigEndian.Uint16(bytecode[ip+1:]))
 		return 2 + 2*count + 2
 	// 4-byte operands
@@ -1158,6 +1164,10 @@ func opcodeOperandSize(op OpCode, bytecode []byte, ip int) int {
 	case OpJSSetProto, OpJSSetThis, OpJSSuperIndexGet, OpJSSuperIndexSet:
 		return 0
 	case OpExtPrefix:
+		// Guarded for the same reason as OpJSObjectRest above.
+		if ip+1 >= len(bytecode) {
+			return 0
+		}
 		extOp := ExtOpCode(bytecode[ip+1])
 		switch extOp {
 		case ExtOpRegisterClassEvent, ExtOpRaiseEvent, ExtOpWithEventsRegister, ExtOpRegisterClassInterface:
