@@ -28,6 +28,11 @@ import (
 	"strconv"
 )
 
+// deadConditionalJumpPass is indirected solely so the fork's equivalence test can
+// substitute the original rescanning implementation and compare whole compiles.
+// It is not a configuration point and must not be varied at runtime.
+var deadConditionalJumpPass = (*Compiler).optimizeDeadConditionalJumpPass
+
 // optimizePeephole performs in-place bytecode peephole optimization.
 // It repeats single-pass scans until no further constant folding is possible,
 // allowing chained binary operations (e.g. 1+2+3) to fully collapse.
@@ -38,7 +43,7 @@ func (c *Compiler) optimizePeephole() {
 		folded := c.optimizePeepholePass()
 		propagated := c.optimizeLocalCopyPropagationPass()
 		intOptimized := c.optimizeIntegerArithmeticPass()
-		deadCode := c.optimizeDeadConditionalJumpPass()
+		deadCode := deadConditionalJumpPass(c)
 		fusedBranch := c.optimizeFusedBranchPass()
 		loadBranch := c.optimizeFusedLoadBranchPass()
 		inPlaceMath := c.optimizeInPlaceMathPass()
@@ -270,6 +275,16 @@ func (c *Compiler) optimizeDeadConditionalJumpPass() bool {
 	targets := collectJumpTargets(c.bytecode)
 	changed := false
 
+	// starts holds the offset of every instruction already decoded, in order, so
+	// the preceding instruction is starts[len(starts)-1] rather than a rescan from
+	// zero. findPreviousInstructionStart is O(n) per call and was called once per
+	// conditional jump, which made this pass - and so every Compile - quadratic in
+	// bytecode length. It dominated compilation of large pages: 95% of the time
+	// spent compiling a 48k-line source, and ~9.5s for one include tree in the PGS
+	// portal. See TestDeadConditionalJumpPassMatchesRescan for the equivalence
+	// check against the original definition.
+	starts := make([]int, 0, len(c.bytecode)/2+1)
+
 	for ip := 0; ip < len(c.bytecode); {
 		op := OpCode(c.bytecode[ip])
 		size := opcodeOperandSize(op, c.bytecode, ip)
@@ -279,36 +294,48 @@ func (c *Compiler) optimizeDeadConditionalJumpPass() bool {
 		}
 
 		if op != OpJumpIfFalse {
+			starts = append(starts, ip)
 			ip = instrEnd
 			continue
 		}
 
 		target := int(binary.BigEndian.Uint32(c.bytecode[ip+1 : ip+5]))
 		if target <= instrEnd || target > len(c.bytecode) || target <= ip {
+			starts = append(starts, ip)
 			ip = instrEnd
 			continue
 		}
 
-		condStart := findPreviousInstructionStart(c.bytecode, ip)
-		for condStart >= 0 && OpCode(c.bytecode[condStart]) == OpNop {
-			condStart = findPreviousInstructionStart(c.bytecode, condStart)
+		// Walk back over any OpNops to the instruction that produced the condition.
+		back := len(starts)
+		condStart := -1
+		for back > 0 {
+			back--
+			if OpCode(c.bytecode[starts[back]]) != OpNop {
+				condStart = starts[back]
+				break
+			}
 		}
 		if condStart < 0 || OpCode(c.bytecode[condStart]) != OpConstant || condStart+3 > len(c.bytecode) {
+			starts = append(starts, ip)
 			ip = instrEnd
 			continue
 		}
 
 		constIdx := int(binary.BigEndian.Uint16(c.bytecode[condStart+1 : condStart+3]))
 		if constIdx < 0 || constIdx >= len(c.constants) {
+			starts = append(starts, ip)
 			ip = instrEnd
 			continue
 		}
 		if !isCompileTimeFalseValue(c.constants[constIdx]) {
+			starts = append(starts, ip)
 			ip = instrEnd
 			continue
 		}
 
 		if hasTargetInRange(targets, instrEnd, target-1) {
+			starts = append(starts, ip)
 			ip = instrEnd
 			continue
 		}
@@ -322,6 +349,12 @@ func (c *Compiler) optimizeDeadConditionalJumpPass() bool {
 		}
 		if mutated {
 			changed = true
+		}
+		// The jump stays; everything up to target is now one-byte OpNops, each of
+		// which is its own instruction start.
+		starts = append(starts, ip)
+		for p := instrEnd; p < target; p++ {
+			starts = append(starts, p)
 		}
 		ip = target
 	}
