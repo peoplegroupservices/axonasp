@@ -133,7 +133,9 @@ covers the decoder directly and a full peephole pass over a truncated tail.
 
 ### 4. `INSERT … RETURNING` and CTEs were not treated as row-returning
 
-Upstream: filed as #132.
+Upstream: [#143](https://github.com/guimaraeslucas/axonasp/issues/143). (The commit
+message for this patch says #132 - that was a guess made before filing, and the
+issue came back as #143.)
 
 `adodbIsQuery` classified only `select`, `show` and `pragma` as producing rows,
 so everything else went down the Exec path, which runs the statement and throws
