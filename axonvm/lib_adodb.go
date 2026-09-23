@@ -40,12 +40,12 @@ import (
 	"unicode"
 	"unicode/utf16"
 
-	"github.com/peoplegroupservices/axonasp/v2/vbscript"
 	_ "github.com/denisenkom/go-mssqldb"
 	"github.com/go-ole/go-ole"
 	"github.com/go-ole/go-ole/oleutil"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
+	"github.com/peoplegroupservices/axonasp/v2/vbscript"
 	_ "github.com/sijms/go-ora/v2"
 	_ "modernc.org/sqlite"
 )
@@ -3267,9 +3267,70 @@ func (vm *VM) adodbFirstNonEmpty(values ...string) string {
 	return ""
 }
 
+// adodbReturningClause finds a RETURNING keyword that is not part of a longer
+// identifier. Callers must strip string literals first; see adodbIsQuery.
+var adodbReturningClause = regexp.MustCompile(`\breturning\b`)
+
+// adodbStripStringLiterals blanks the contents of single-quoted SQL literals, so
+// that keyword detection cannot be fooled by data. Two consecutive quotes inside
+// a literal are an escaped quote, not the end of it.
+//
+// Without this, a statement like
+//
+//	insert into notes (body) values ('returning next week')
+//
+// would be taken for a row-returning statement. The PGS portal has two such
+// literals, so this is not hypothetical.
+func adodbStripStringLiterals(s string) string {
+	var b strings.Builder
+	b.Grow(len(s))
+	inLiteral := false
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		if c == '\'' {
+			if inLiteral && i+1 < len(s) && s[i+1] == '\'' {
+				b.WriteString("  ") // an escaped quote, still inside the literal
+				i++
+				continue
+			}
+			inLiteral = !inLiteral
+			b.WriteByte(c)
+			continue
+		}
+		if inLiteral {
+			b.WriteByte(' ')
+			continue
+		}
+		b.WriteByte(c)
+	}
+	return b.String()
+}
+
+// adodbIsQuery reports whether a statement produces rows, and so has to run
+// through Query rather than Exec.
+//
+// Leading SELECT is not the only shape that returns rows:
+//
+//   - PostgreSQL's RETURNING makes INSERT, UPDATE and DELETE produce a result
+//     set. Classic ASP code against MSDASQL relies on this and reads the new id
+//     straight back; sending it through Exec executes the statement but throws
+//     the rows away, so the page sees an empty recordset and concludes the write
+//     failed when it actually succeeded.
+//   - A common table expression starts with WITH, and the SELECT it feeds is
+//     what returns the rows.
+//
+// See TestADODBIsQueryRecognisesRowReturningStatements.
 func (vm *VM) adodbIsQuery(sql string) bool {
 	s := strings.ToLower(strings.TrimSpace(sql))
-	return strings.HasPrefix(s, "select") || strings.HasPrefix(s, "show") || strings.HasPrefix(s, "pragma")
+	switch {
+	case strings.HasPrefix(s, "select"), strings.HasPrefix(s, "show"), strings.HasPrefix(s, "pragma"):
+		return true
+	case strings.HasPrefix(s, "with"):
+		return true
+	case strings.HasPrefix(s, "insert"), strings.HasPrefix(s, "update"), strings.HasPrefix(s, "delete"):
+		return adodbReturningClause.MatchString(adodbStripStringLiterals(s))
+	}
+	return false
 }
 
 // adodbNormalizeRecordsetSource rewrites bare table names passed to Recordset.Open

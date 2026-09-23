@@ -131,6 +131,29 @@ Both reads are now guarded and return 0, so a walker advances one byte and
 terminates instead of dying. `axonvm/opcode_operand_size_truncated_test.go`
 covers the decoder directly and a full peephole pass over a truncated tail.
 
+### 4. `INSERT … RETURNING` and CTEs were not treated as row-returning
+
+Upstream: filed as #132.
+
+`adodbIsQuery` classified only `select`, `show` and `pragma` as producing rows,
+so everything else went down the Exec path, which runs the statement and throws
+any result set away. Two shapes this gets wrong:
+
+- **PostgreSQL's `RETURNING`.** `insert … returning id` executes and the row
+  lands in the table, but ASP sees an empty recordset and concludes the write
+  failed. Classic ASP against MSDASQL reads the new id straight back this way.
+  The PGS portal does it in 16 files, plus 4 `update … returning`.
+- **Common table expressions.** A query starting `with x as (…) select …`
+  returns rows through the select it feeds. The portal has 25 of these.
+
+Detection strips single-quoted string literals first, because `returning` does
+appear inside literals in this codebase — `values ('returning next week')` would
+otherwise be misread as row-returning.
+
+Verified against a live PostgreSQL through both ADODB paths, `Connection.Execute`
+and `Recordset.Open`: before the patch the row inserts but no id comes back;
+after it, `rs.eof=False` and the id arrives.
+
 ## Upstream test suite
 
 21 tests in `./axonvm` fail on upstream v2.3.22 on Linux before any of our
