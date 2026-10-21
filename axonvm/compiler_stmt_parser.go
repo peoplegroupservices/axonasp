@@ -879,10 +879,10 @@ func (c *Compiler) parseStatement() {
 					}
 				}
 				c.emit(OpCall, argCount)
-				if op == OpGetGlobal {
+				if op == OpGetGlobal || op == OpGetLocal {
 					c.registerForwardCallPatch(name, loadPos)
 				}
-			} else if isKnownZeroArgSub || (!isKnownVariable && op == OpGetGlobal) {
+			} else if isKnownZeroArgSub || (!isKnownVariable && (op == OpGetGlobal || op == OpGetLocal)) {
 				// Zero-argument bare Sub/Function call: the identifier is alone on the
 				// statement line with no "=", "(", or "." following it. In VBScript this
 				// invokes the Sub/Function, discarding any return value.
@@ -896,7 +896,7 @@ func (c *Compiler) parseStatement() {
 				//      declaration is parsed. If the target is never resolved as a
 				//      Sub/Function, the runtime pushes VTEmpty for non-callable values.
 				c.emit(OpCall, 0)
-				if op == OpGetGlobal {
+				if op == OpGetGlobal || (op == OpGetLocal && !isKnownVariable) {
 					c.registerForwardCallPatch(name, loadPos)
 				}
 			}

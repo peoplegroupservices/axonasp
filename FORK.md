@@ -156,6 +156,38 @@ Verified against a live PostgreSQL through both ADODB paths, `Connection.Execute
 and `Recordset.Open`: before the patch the row inserts but no id comes back;
 after it, `rs.eof=False` and the id arrives.
 
+### 5. A forward-referenced Sub called from inside a procedure silently did nothing
+
+Upstream: filed as #173.
+
+A bare Sub call made from inside a Function or Sub body, to a Sub declared later
+in the file, compiled to a load of a procedure **local** rather than the Sub.
+Nothing registered a forward-call patch for that load, so at runtime the call
+target was an empty local: the call did nothing, raised nothing, returned
+nothing. The statement simply vanished.
+
+Two causes, both fixed:
+
+- `registerForwardCallPatch` was only called when the load was `OpGetGlobal`.
+  Inside a procedure, `resolveVar` has nothing better to give an unknown name
+  than a local, so the patch was never recorded. It now covers `OpGetLocal`, and
+  `patchForwardCallSites` rewrites either (both carry a 2-byte operand, so the
+  instruction length is unchanged and later offsets stay valid).
+- For the multi-argument form the `isKnownVariable` guard had to go. `resolveVar`
+  adds unknown names to `implicitGlobals`, so the *first* forward call made every
+  later one look like a known variable. `name arg1, arg2` can only be a procedure
+  call, and `patchForwardCallSites` only rewrites a load when a Sub of that name
+  is actually declared, so registering unconditionally is safe. The zero-argument
+  form keeps the guard, since a bare identifier there is ambiguous.
+
+This is what stopped local sign-in: `inc/_global.asp` calls `cleanOpen`
+(declared line 5616) from inside `getSessionID2` (line 4565), so the session
+INSERT was never sent. 98 of the 100 call sites in that file are forward
+references. Three calls per login request were dispatching to nothing.
+
+`axonvm/forward_sub_call_test.go` covers both arities, the backward reference,
+and a local variable of the same name still winning.
+
 ## Upstream test suite
 
 21 tests in `./axonvm` fail on upstream v2.3.22 on Linux before any of our

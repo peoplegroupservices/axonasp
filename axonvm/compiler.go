@@ -1411,7 +1411,9 @@ func (c *Compiler) patchForwardCallSites(name string, userSubConstIdx int) {
 		if pos < 0 || pos+2 >= len(c.bytecode) {
 			continue
 		}
-		if OpCode(c.bytecode[pos]) != OpGetGlobal {
+		// Both loads carry a 2-byte operand, so rewriting either to OpConstant
+		// keeps the instruction the same length and leaves later offsets valid.
+		if op := OpCode(c.bytecode[pos]); op != OpGetGlobal && op != OpGetLocal {
 			continue
 		}
 		c.bytecode[pos] = byte(OpConstant)
