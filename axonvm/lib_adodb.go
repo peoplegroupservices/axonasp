@@ -179,6 +179,23 @@ type adodbError struct {
 	sqlState    string
 }
 
+// adodbImplicitConnectionID registers a connection built from a connection
+// string and returns its object id.
+//
+// ADO lets a connection string be assigned to ActiveConnection on a Recordset
+// or a Command, and opens an implicit connection from it. Accepting only an
+// object meant the assignment was silently dropped, leaving the recordset with
+// no connection at all - so the later Open() failed with "no active
+// connection", pointing at the Open rather than at the assignment that did
+// nothing. The portal does this at 60 sites.
+func (vm *VM) adodbImplicitConnectionID(connStr string) int64 {
+	v := vm.newADODBConnection()
+	if conn, ok := vm.adodbConnectionItems[v.Num]; ok {
+		conn.connectionString = connStr
+	}
+	return v.Num
+}
+
 // newADODBConnection allocates one ADODB.Connection native object.
 func (vm *VM) newADODBConnection() Value {
 	objID := vm.nextDynamicNativeID
@@ -1011,6 +1028,16 @@ func (vm *VM) dispatchADODBRecordsetPropertySet(rs *adodbRecordset, member strin
 	case strings.EqualFold(member, "ActiveConnection"):
 		if val.Type == VTNativeObject {
 			rs.activeConnection = val.Num
+			return true
+		}
+		// A connection string is equally valid here; see
+		// adodbImplicitConnectionID. Gated on the value actually being a string
+		// rather than on its text, because Nothing stringifies to something
+		// non-empty and must leave the recordset alone.
+		if val.Type == VTString {
+			if connStr := strings.TrimSpace(val.Str); connStr != "" {
+				rs.activeConnection = vm.adodbImplicitConnectionID(connStr)
+			}
 		}
 		return true
 	case strings.EqualFold(member, "ActiveCommand"):
@@ -2032,6 +2059,10 @@ func (vm *VM) dispatchADODBCommandPropertySet(cmd *adodbCommand, member string, 
 	case strings.EqualFold(member, "ActiveConnection"):
 		if val.Type == VTNativeObject {
 			cmd.activeConnection = val.Num
+		} else if val.Type == VTString {
+			if connStr := strings.TrimSpace(val.Str); connStr != "" {
+				cmd.activeConnection = vm.adodbImplicitConnectionID(connStr)
+			}
 		}
 		return true
 	case strings.EqualFold(member, "CommandText"):

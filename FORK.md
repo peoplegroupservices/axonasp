@@ -238,6 +238,49 @@ complete foldable sequence one byte off the real boundary and a correct scan
 never sees it, and asserts the pass leaves it alone. It fails against the bug
 with "pass rewrote byte 3".
 
+### 7. `ActiveConnection` silently ignored a connection string
+
+Upstream: not filed yet.
+
+ADO lets a connection string be assigned to `ActiveConnection` on a Recordset or
+a Command, and opens an implicit connection from it. Both setters accepted only
+a native object:
+
+```go
+case strings.EqualFold(member, "ActiveConnection"):
+    if val.Type == VTNativeObject {
+        rs.activeConnection = val.Num
+    }
+    return true
+```
+
+A string fell through and the assignment did nothing, so the recordset was left
+with no connection and the later `Open()` failed with
+`ADODB.Recordset.Open: no active connection` — blaming the `Open` rather than
+the assignment that was dropped.
+
+The portal does this at 60 sites, `ShowFAQs` in `inc/_global.asp` among them:
+
+```asp
+set rf = Server.CreateObject("ADODB.Recordset")
+rf.ActiveConnection = postgresConn   ' a connection string
+rf.source = "select ..."
+rf.open()
+```
+
+Assigning a string now registers a connection carrying it, which
+`adodbConnectionOpen` then opens as usual. Gated on the value's type being a
+string rather than on its text, because `Nothing` stringifies to something
+non-empty and must leave the recordset alone — `cleanOpen` assigns `Nothing`
+after opening and has always relied on that doing nothing.
+
+`axonvm/adodb_activeconnection_string_test.go` covers both objects, the string
+form, and that `Nothing`, `Empty` and a blank string change nothing.
+
+Worth noting separately: `Recordset.Open sql, <connection string>` has the same
+gap, since ADO accepts a string as the second argument too. The portal only ever
+passes an object there, so that is left alone and mentioned upstream instead.
+
 ## Upstream test suite
 
 21 tests in `./axonvm` fail on upstream v2.3.22 on Linux before any of our
