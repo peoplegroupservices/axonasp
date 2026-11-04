@@ -242,6 +242,13 @@ with "pass rewrote byte 3".
 
 21 tests in `./axonvm` fail on upstream v2.3.22 on Linux before any of our
 changes — filesystem, Request-collection and JScript ActiveX cases that look
-environment-dependent. `TestJScriptActiveXObjectBinding` is additionally
-order-dependent: it passes in isolation and fails in a full run. Compare failure
-*sets* before and after a patch rather than counting, or you will chase ghosts.
+environment-dependent. Compare failure *sets* before and after a patch rather
+than counting, or you will chase ghosts.
+
+It was 22 until patch 6. `TestJScriptActiveXObjectBinding` was recorded here as
+order-dependent, passing in isolation and failing in a full run, and that was
+wrong: it was the bytecode corruption in patch 6. Whether the stray scan lands
+on a byte equal to `OpConstant` depends on what the constants pool happens to
+hold, which depends on what compiled earlier in the run — so the symptom looked
+like test order and was really the pass corrupting the program. Worth
+remembering the next time something here is written off as flaky.
