@@ -190,7 +190,7 @@ and a local variable of the same name still winning.
 
 ### 6. `optimizePeepholePass` scanned from inside an operand and corrupted bytecode
 
-Upstream: filed as #181.
+Upstream: not filed yet.
 
 Every path out of the constant-folding loop that did **not** match the
 `OpConstant`/`OpConstant`/binary-op pattern advanced the scan by a single byte,
