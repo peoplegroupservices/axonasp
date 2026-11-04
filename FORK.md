@@ -188,6 +188,56 @@ references. Three calls per login request were dispatching to nothing.
 `axonvm/forward_sub_call_test.go` covers both arities, the backward reference,
 and a local variable of the same name still winning.
 
+### 6. `optimizePeepholePass` scanned from inside an operand and corrupted bytecode
+
+Upstream: filed as #181.
+
+Every path out of the constant-folding loop that did **not** match the
+`OpConstant`/`OpConstant`/binary-op pattern advanced the scan by a single byte,
+from a position the loop had just proven held an `OpConstant`. One byte on from
+an `OpConstant` is its operand, so the next iteration read an operand byte as an
+opcode — contradicting the comment twenty lines above it, which says operand
+bytes must never be misinterpreted as opcodes.
+
+That alone is harmless. It becomes memory corruption when the operand byte
+happens to equal `byte(OpConstant)` and the bytes after it happen to form a
+second `OpConstant` and a foldable operator: the pass then folds two unrelated
+byte pairs into a constant and writes the result over real instructions. From
+there the instruction stream is misaligned, and the VM executes whatever the
+drifting instruction pointer decodes.
+
+Both conditions are coincidences, so it needs a large program. On the portal's
+`/account/` page — 1.4MB of bytecode, 32,292 constants — a VBScript request
+panicked inside the handler for `OpJSSuperMemberGet`, a **JavaScript** opcode,
+having read two unrelated bytes as a constant index:
+
+```
+runtime error: index out of range [60652] with length 32292
+VM context: ip=283768, nextOp=OpNop, bytecodeLen=1496230, constantsLen=32292
+```
+
+The fix is five `i++` becoming `i += 3`.
+
+Compiling all 579 portal pages reported **7,720** integrity problems before the
+fix and **0** after.
+
+This patch also carries the diagnostic that found it, because the bug is
+invisible where it happens and fatal thousands of instructions later.
+`axonvm/compiler_verify.go` adds `verifyBytecodeAlignment`, which reports any
+jump whose target is not the first byte of an instruction — the one invariant
+this family of passes exists to preserve, since they pad with `OpNop` rather
+than deleting bytes precisely so absolute targets stay valid. `optimizePeephole`
+calls it after each pass when `AXONASP_VERIFY` is set, so a pass that resizes an
+instruction is named at the point it does it. It is off and free otherwise.
+
+Upstream already had `validateBytecodeIndices` for a similar purpose, but
+nothing ever called it.
+
+`axonvm/peephole_alignment_test.go` builds a stream where a drifted scan finds a
+complete foldable sequence one byte off the real boundary and a correct scan
+never sees it, and asserts the pass leaves it alone. It fails against the bug
+with "pass rewrote byte 3".
+
 ## Upstream test suite
 
 21 tests in `./axonvm` fail on upstream v2.3.22 on Linux before any of our
