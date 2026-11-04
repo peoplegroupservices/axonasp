@@ -245,10 +245,9 @@ changes — filesystem, Request-collection and JScript ActiveX cases that look
 environment-dependent. Compare failure *sets* before and after a patch rather
 than counting, or you will chase ghosts.
 
-It was 22 until patch 6. `TestJScriptActiveXObjectBinding` was recorded here as
-order-dependent, passing in isolation and failing in a full run, and that was
-wrong: it was the bytecode corruption in patch 6. Whether the stray scan lands
-on a byte equal to `OpConstant` depends on what the constants pool happens to
-hold, which depends on what compiled earlier in the run — so the symptom looked
-like test order and was really the pass corrupting the program. Worth
-remembering the next time something here is written off as flaky.
+`TestJScriptActiveXObjectBinding` is flaky rather than consistently failing: on
+patch 6 it failed once in four full runs. It was briefly recorded here as fixed
+by patch 6, on the strength of a single passing run — that was wrong, and the
+count moves between 21 and 22 depending on which run you look at. This is what
+the paragraph above is about: compare failure *sets* over repeated runs, and do
+not read a cause into one green run.
