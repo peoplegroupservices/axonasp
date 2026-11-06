@@ -314,6 +314,37 @@ connection, no source) still opens empty exactly as before.
 `axonvm/recordset_open_source_property_test.go` pins all three behaviours
 against a real SQLite database.
 
+### 9. Null stringified as the word "Null"; string functions and casts wrong on Null
+
+Upstream: [#188](https://github.com/guimaraeslucas/axonasp/issues/188), with the
+full measured matrix in the issue comments. Every expectation is a measurement
+from [iis-oracle](https://github.com/saborrie/iis-oracle), not a derivation.
+
+VBScript's string coercion treats Null as a zero-length string, so
+`Response.Write "<td>" & rs("note") & "</td>"` renders `<td></td>` when the
+column is NULL. The engine stringified Null as the word `Null`, so every page
+concatenating a nullable column rendered "Null" to the user — silently, on
+hundreds of portal pages. The engine's `&` (`concatValues`) was already right;
+the leak was `valueToString`, which `Response.Write`, the `OpWriteN` write
+chain, and the builtins all use.
+
+The measured contract, now implemented and pinned:
+
+- `&` with one Null operand → `""`, result String; `Null & Null` → Null
+  (that case was also wrong, giving `""`). `+` keeps propagating Null.
+- `valueToString(Null)` → `""`, so `Response.Write Null` writes nothing and
+  raises nothing. JScript keeps its own `jsToString` (`null`).
+- Explicit casts — `CStr`, `CBool`, `CDate` (and already `CInt`/`CLng`/`CDbl`)
+  — raise 94, Invalid use of Null.
+- `Len`, `LenB`, `Trim`, `LTrim`, `RTrim`, `UCase`, `LCase`, `Left`, `Right`,
+  `Mid`, `InStr` (string positions), `StrComp` propagate Null. `Replace` is
+  the measured exception: 94 for Null in any of its three string arguments.
+- `If Null Then` takes the false branch without raising (already correct;
+  pinned because two of us guessed it would raise).
+
+`axonvm/null_semantics_test.go` runs the whole matrix as one page and asserts
+every line.
+
 ## Upstream test suite
 
 21 tests in `./axonvm` fail on upstream v2.3.22 on Linux before any of our
