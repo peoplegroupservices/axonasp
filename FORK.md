@@ -281,6 +281,39 @@ Worth noting separately: `Recordset.Open sql, <connection string>` has the same
 gap, since ADO accepts a string as the second argument too. The portal only ever
 passes an object there, so that is left alone and mentioned upstream instead.
 
+### 8. A no-argument `Recordset.Open()` ignored the `Source` property
+
+Upstream: not filed yet. Still present in upstream v2.3.31.
+
+Real ADO executes the recordset's `Source` property when `Open` is called
+without a source argument. `adodbRecordsetOpen` only copied a non-empty
+argument *into* `rs.source` and never fell back the other way, so
+
+```asp
+rs.Source = "SELECT ..."
+rs.Open()
+```
+
+sent an **empty query** to the driver. That is not even an error on the
+drivers we use — SQLite and PostgreSQL both treat an empty statement as an
+empty result — so the recordset came back EOF with no rows and nothing raised,
+looking exactly like a query that matched nothing.
+
+Reported by Derren on 2026-11-06, running the fork (`v2.3.22-pgs.7`) against
+his own backup database. The portal uses the idiom at ~480 call sites, and the
+60 `ActiveConnection`-string sites that patch 7 unblocked (`ShowFAQs` among
+them) all flow into this: patch 7 got them past "no active connection" and this
+patch makes them return rows. Patch 7's test stopped at the property
+assignment, which is why this was not caught there.
+
+The fix is a fallback in `adodbRecordsetOpen`: when the argument is empty and
+`rs.source` is not, execute `rs.source`. An explicit argument still wins and
+still overwrites the property, and a fabricated recordset (fields appended, no
+connection, no source) still opens empty exactly as before.
+
+`axonvm/recordset_open_source_property_test.go` pins all three behaviours
+against a real SQLite database.
+
 ## Upstream test suite
 
 21 tests in `./axonvm` fail on upstream v2.3.22 on Linux before any of our
