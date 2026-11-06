@@ -345,6 +345,23 @@ The measured contract, now implemented and pinned:
 `axonvm/null_semantics_test.go` runs the whole matrix as one page and asserts
 every line.
 
+### 10. Lifting a Recordset filter kept only the previously matching rows
+
+Upstream: [#189](https://github.com/guimaraeslucas/axonasp/issues/189), with
+measurements in the comments.
+
+`adodbRecordsetApplyFilterSort` overwrote `rs.data` with the filtered slice,
+so `rs.Filter = ""` (or `adFilterNone`) had nothing to restore: filtering was
+destructive. ADO treats a filter as a view — lifting it restores the full set,
+and each new criteria filters the full set, not the current subset.
+
+The fix snapshots the full row set on first filter (`rs.unfiltered`), filters
+from the snapshot, and restores it when the filter is assigned `""` or `0`.
+Measured positioning holds: after applying, the cursor sits on the first
+matching row; after lifting, on the first row of the restored set.
+
+`axonvm/recordset_filter_lift_test.go` mirrors the oracle probe exactly.
+
 ## Upstream test suite
 
 21 tests in `./axonvm` fail on upstream v2.3.22 on Linux before any of our
